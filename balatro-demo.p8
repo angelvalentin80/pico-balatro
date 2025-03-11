@@ -15,6 +15,7 @@ max_selected = 5
 card_selected_count = 0
 suits = {'H', 'D', 'C', 'S'}
 sprite_index_lookup_table = {}
+suit_colors = {S=5,C=12,H=8,D=9}
 ranks = {
 	{rank = 'A', base_chips = 11},
 	{rank = 'K', base_chips = 10},
@@ -273,7 +274,7 @@ special_cards = {
 				if #selected_cards <= 2 then
 					for card in all(selected_cards) do
 						local higher_rank = find_1_rank_higher(card.rank)
-						card.sprite_index = sprite_index_lookup_table[higher_rank..card.suit]
+						card.sprite_index = sprite_index_lookup_table[higher_rank]
 						card.rank = higher_rank 
 						card.order = find_rank_order(higher_rank)
 						card.chips = find_rank_base_chips(higher_rank)
@@ -769,7 +770,7 @@ function create_base_deck()
 				chips = ranks[x].base_chips,
 				effect_chips = 0,
 				mult = 0,
-				sprite_index = sprite_index_lookup_table[ranks[x]["rank"] .. suits[y]],
+				sprite_index = sprite_index_lookup_table[ranks[x]["rank"]],
 				order = ranks[x].order,
 				-- Resettable params
 				selected = false,
@@ -827,11 +828,10 @@ function build_sprite_index_lookup_table()
 
 	-- Create deck
 	for x=1,#ranks do
-		for y=1,#suits do
-			sprite_index_lookup_table[ranks[x]["rank"] .. suits[y]] = sprite_index
-			sprite_index = sprite_index + 1
-		end
+		sprite_index_lookup_table[ranks[x]["rank"]] = sprite_index
+		sprite_index = sprite_index + 4
 	end
+	
 end
 
 function add_resettable_params_to_special_cards()
@@ -904,20 +904,27 @@ function draw_background()
     rectfill(0, 0, 128, 128, 3) 
 end
 
+function draw_card(card, x, y)
+    pal(8,suit_colors[card.suit])
+    spr(card.sprite_index, x, y)
+    -- print(card.sprite_index,x,y+8)
+    pal()
+end
+
 function draw_hand()	
 	draw_hand_start_x = 15	
 	draw_hand_start_y = 90 
 	if init_draw then
 		for x=1,#hand do
- 	   		spr(hand[x].sprite_index, draw_hand_start_x, draw_hand_start_y) 
+			draw_card(hand[x], draw_hand_start_x, draw_hand_start_y)
 			hand[x].pos_x = draw_hand_start_x
 			hand[x].pos_y = draw_hand_start_y
-			draw_hand_start_x = draw_hand_start_x + card_width + draw_hand_gap
+			draw_hand_start_x += card_width + draw_hand_gap
 		end
 		init_draw = false
 	else
 		for x=1,#hand do
- 	   		spr(hand[x].sprite_index, hand[x].pos_x, hand[x].pos_y) 
+ 	   		draw_card(hand[x], hand[x].pos_x, hand[x].pos_y) 
 		end
 	end
 end
@@ -1060,12 +1067,12 @@ function draw_each_card_in_table(table, start_x, start_y, gap)
 		if start_x > screen_width - card_width then
 			start_y = start_y + card_height				
 			start_x	= original_start_x
-			spr(card.sprite_index, start_x, start_y)	
+			draw_card(card, start_x, start_y)
 			card.pos_x = start_x 
 			card.pos_y = start_y 
 			start_x = start_x + card_width + gap 
 		else
-			spr(card.sprite_index, start_x, start_y)	
+			draw_card(card, start_x, start_y)
 			card.pos_x = start_x 
 			card.pos_y = start_y 
 			start_x = start_x + card_width + gap 
@@ -1602,7 +1609,7 @@ end
 function change_to_suit(suit, tarot)
 	if #selected_cards <= 3 then
 		for card in all(selected_cards) do
-			card.sprite_index = sprite_index_lookup_table[card.rank..suit]
+			card.sprite_index = sprite_index_lookup_table[card.rank]
 			card.suit = suit 
 			card.selected = false
 			card.pos_y = card.pos_y + 10
