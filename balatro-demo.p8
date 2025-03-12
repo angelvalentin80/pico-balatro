@@ -424,6 +424,60 @@ special_cards = {
 	}
 }
 
+-- Special object to support full 32-bit integers
+-- should work up to 2 billion
+--
+bigscore = {
+}
+
+function bigscore:new(val)
+	if type(val) == 'number' then
+		obj = {v = val >> 16}
+	else -- copy from object
+		obj = val
+	end
+	-- works for + and *, not >=
+	return setmetatable(obj, {
+		__index=self,
+		__add=self.__add,
+		__mul=self.__mul
+	})
+end
+
+function bigscore:str()
+	return tostr(self.v,2)
+end
+
+function bigscore:process_max()
+	if (self.v < 0) self.v=tonum("2000000000",2)
+end
+
+-- allow mixing with ints
+-- in some math operations
+function bigscore:__add(other)
+	if type(other) == 'number' then
+		return bigscore:new({v=self.v+(other>>16)})
+	else
+		return bigscore:new({v=self.v+other.v})
+	end
+end
+
+function bigscore:__mul(other)
+	if type(other) == 'number' then
+		return bigscore:new({v=self.v*other})
+	else
+		return bigscore:new({v=self.v*(other.v<<16)})
+	end
+end
+
+function bigscore:greater_or_equal(other)
+	if type(other) == 'number' then
+		return self.v >= (other>>16)
+	elseif type(other) == 'table' then
+		return self.v >= other.v
+	end
+end
+
 deck_sprite_index = 68
 deck_sprite_pos_x = 105
 deck_sprite_pos_y = 100
@@ -487,15 +541,15 @@ joker_limit = 5
 tarot_limit = 2
 reroll_price = 5
 hand_size = 8
-score = 0
-score_cap = 32767
+score = bigscore:new(0)
+score_cap = tonum("2000000000",2)
 chips = 0
 mult = 0
 hands = 4
 discards = 4
 money = 4
 round = 1
-goal_score = 300
+goal_score = bigscore:new(300)
 in_shop = false
 is_viewing_deck = false
 money_earned_per_round = 3
@@ -603,10 +657,8 @@ function score_hand()
 		mult = mult + card.mult
 	end
 	score_jokers()
-	score = score + (chips * mult)
-	if score < 0 then
-		score = score_cap
-	end
+	score += (chips * mult)
+	score:process_max()
 	chips = 0
 	mult = 0
 	hand_type_text = ""
@@ -666,10 +718,8 @@ end
 
 function update_round_and_score() 
 	round = round + 1
-	goal_score = flr(goal_score * 1.5)
-	if goal_score < 0 then
-		goal_score = score_cap
-	end
+	goal_score *= 1.5
+	goal_score:process_max()
 end
 
 function win_state()
@@ -699,12 +749,12 @@ function lose_state()
 	tarot_cards = {}
 	joker_cards = {}
 	round = 1
-	goal_score = 300
+	goal_score = bigscore:new(300)
 	card_selected_count = 0
 	scored_cards = {}
 	hands = 4
 	discards = 4
-	score = 0
+	score = bigscore:new(0)
 	reroll_price = 5
 	shuffled_deck = shuffle_deck(base_deck)
 	reset_card_params()
@@ -956,9 +1006,9 @@ end
 
 function draw_score()
 	if in_shop == false then
-		print("Score:" .. score, 2, 60, 7)
+		print("Score:" .. score:str(), 2, 60, 7)
 	else
-		print("Scored Last:" .. score, 30, 120, 7)
+		print("Scored Last:" .. score:str(), 30, 120, 7)
 	end
 end
 
@@ -983,10 +1033,10 @@ end
 function draw_round_and_score()
 	if in_shop == false then
 		print("Round:" .. round, 2, 40, 7)
-		print("Goal Score:" .. goal_score, 2, 50, 7)
+		print("Goal Score:" .. goal_score:str(), 2, 50, 7)
 	else
 		print("Round:" .. round, 30, 100, 7)
-		print("Next Score:" .. goal_score, 30, 110, 7)
+		print("Next Score:" .. goal_score:str(), 30, 110, 7)
 	end
 end
 
@@ -1143,7 +1193,7 @@ function play_button_clicked()
 		sfx(sfx_play_btn_clicked)
 		hands = hands - 1
 		score_hand()
-		if score >= goal_score then
+		if score:greater_or_equal(goal_score) then
 			win_state()
 			in_shop = true
 		else
@@ -1185,7 +1235,7 @@ function go_next_button_clicked()
 		shop_options = {}
 		error_message = ""
 		reroll_price = 5
-		score = 0
+		score = bigscore:new(0)
 	end
 end
 
