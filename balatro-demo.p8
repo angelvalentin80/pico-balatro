@@ -83,7 +83,7 @@ special_cards = {
 				mult = mult + flr(rnd(25))
 			end,
 			sprite_index = 131, 
-			description = "Adds a random amount of mult. Lowest being 0, highest being 25",
+			description = "adds a random amount of mult.\nlowest being 0, highest being 25",
 			type = "Joker"
 		},
 		{
@@ -160,7 +160,7 @@ special_cards = {
 				chips = chips + rnd(chip_options)
 			end,
 			sprite_index = 138, 
-			description = "Adds a random amount of chips. Lowest being 0, highest being 150",
+			description = "adds a random amount of chips.\nlowest being 0, highest being 150",
 			type = "Joker"
 		}
 	},
@@ -172,103 +172,103 @@ special_cards = {
 				level_up_hand_type("Royal Flush", 5, 50)
 			end,
 			sprite_index = 153,
-			description = "Levels up the Royal Flush. + 5 mult and + 50 chips",
+			description = "levels up the royal flush.\n+ 5 mult and + 50 chips",
 			type = "Planet"
 		},
 		{
-			name = "Level Up Straight Flush",
+			name = "Neptune",
 			price = 5,
 			effect = function()
 				level_up_hand_type("Straight Flush", 4, 40)
 			end,
 			sprite_index = 152,
-			description = "Levels up the Straight Flush. + 4 mult and + 40 chips",
+			description = "levels up the straight flush.\n+ 4 mult and + 40 chips",
 			type = "Planet"
 		},
 		{
-			name = "Level Up Four of a Kind",
+			name = "Mars",
 			price = 4,
 			effect = function()
 				level_up_hand_type("Four of a Kind", 3, 30)
 			end,
 			sprite_index = 151,
-			description = "Levels up the Four of a Kind. + 3 mult and + 30 chips",
+			description = "levels up the Four of a Kind.\n+ 3 mult and + 30 chips",
 			type = "Planet"
 		},
 		{
-			name = "Level Up Full House",
+			name = "earth",
 			price = 3,
 			effect = function()
 				level_up_hand_type("Full House", 2, 25)
 			end,
 			sprite_index = 150,
-			description = "Levels up the Full House. + 2 mult and + 25 chips",
+			description = "levels up the full house.\n+ 2 mult and + 25 chips",
 			type = "Planet"
 		},
 		{
-			name = "Level Up Flush",
+			name = "jupiter",
 			price = 3,
 			effect = function()
 				level_up_hand_type("Flush", 2, 15)
 			end,
 			sprite_index = 149,
-			description = "Levels up the Flush. + 2 mult and + 15 chips",
+			description = "levels up the Flush.\n+ 2 mult and + 15 chips",
 			type = "Planet"
 		},
 		{
-			name = "Level Up Straight",
+			name = "saturn",
 			price = 3,
 			effect = function()
 				level_up_hand_type("Straight", 3, 30)
 			end,
 			sprite_index = 148,
-			description = "Levels up the Straight. + 3 mult and + 30 chips",
+			description = "levels up the straight.\n+ 3 mult and + 30 chips",
 			type = "Planet"
 		},
 		{
-			name = "Level Up Three of a Kind",
+			name = "venus",
 			price = 2,
 			effect = function()
 				level_up_hand_type("Three of a Kind", 2, 20)
 			end,
 			sprite_index = 147,
-			description = "Levels up the Three of a Kind. + 2 mult and + 20 chips",
+			description = "levels up the three of a kind.\n+ 2 mult and + 20 chips",
 			type = "Planet"
 		},
 		{
-			name = "Level Up Two Pair",
+			name = "uranus",
 			price = 2,
 			effect = function()
 				level_up_hand_type("Two Pair", 1, 20)
 			end,
 			sprite_index = 146,
-			description = "Levels up the Two Pair. + 1 mult and + 20 chips",
+			description = "levels up the two pair\n+ 1 mult and + 20 chips",
 			type = "Planet"
 		},
 		{
-			name = "Level Up Pair",
+			name = "mercury",
 			price = 1,
 			effect = function()
 				level_up_hand_type("Pair", 1, 15)
 			end,
 			sprite_index = 145,
-			description = "Levels up the Pair. + 1 mult and + 15 chips",
+			description = "levels up the pair.\n+ 1 mult and + 15 chips",
 			type = "Planet"
 		},
 		{
-			name = "Level Up High Card",
+			name = "pluto",
 			price = 1,
 			effect = function()
 				level_up_hand_type("High Card", 1, 10)
 			end,
 			sprite_index = 144,
-			description = "Levels up the High Card. + 1 mult and + 10 chips",
+			description = "levels up the high card.\n+ 1 mult and + 10 chips",
 			type = "Planet"
 		}
 	},
 	Tarots = {
 		{
-			name = "Increase Rank",
+			name = "strength",
 			price = 2,
 			effect = function(tarot)
 				if #selected_cards <= 2 then
@@ -291,51 +291,51 @@ special_cards = {
 				end
 			end,
 			sprite_index = 160,
-			description = "Increases the rank of two selected cards by 1",
+			description = "increases the rank of two\nselected cards by 1",
 			type = "Tarot"
 		},
 		{
-			name = "Change to Hearts",
+			name = "the sun",
 			price = 2,
 			effect = function(tarot)
 				change_to_suit("H", tarot)	
 			end,
 			sprite_index = 161,
-			description = "Changes the suit of 3 selected cards to Hearts",
+			description = "changes the suit of 3 selected \ncards to hearts",
 			type = "Tarot"
 		},
 		{
-			name = "Change to Diamonds",
+			name = "the star",
 			price = 2,
 			effect = function(tarot)
 				change_to_suit("D", tarot)	
 			end,
 			sprite_index = 162,
-			description = "Changes the suit of 3 selected cards to Diamonds",
+			description = "changes the suit of 3 selected \ncards to diamonds",
 			type = "Tarot"
 		},
 		{
-			name = "Change to Clubs",
+			name = "the moon",
 			price = 2,
 			effect = function(tarot)
 				change_to_suit("C", tarot)	
 			end,
 			sprite_index = 163,
-			description = "Changes the suit of 3 selected cards to Clubs",
+			description = "changes the suit of 3 selected \ncards to clubs",
 			type = "Tarot"
 		},
 		{
-			name = "Change to Spades",
+			name = "the world",
 			price = 2,
 			effect = function(tarot)
 				change_to_suit("S", tarot)	
 			end,
 			sprite_index = 164,
-			description = "Changes the suit of 3 selected cards to Spades",
+			description = "changes the suit of 3 selected \ncards to spades",
 			type = "Tarot"
 		},
 		{
-			name = "Add 4 Mult",
+			name = "the empress",
 			price = 2,
 			effect = function(tarot)
 				if #selected_cards <= 2 then
@@ -355,11 +355,11 @@ special_cards = {
 				end
 			end,
 			sprite_index = 165,
-			description = "Gives two cards the ability to add 4 Mult when scored",
+			description = "gives two cards the ability\nto add 4 mult when scored",
 			type = "Tarot"
 		},
 		{
-			name = "Add 30 Chips",
+			name = "the hierophant",
 			price = 2,
 			effect = function(tarot)
 				if #selected_cards <= 2 then
@@ -379,11 +379,11 @@ special_cards = {
 				end
 			end,
 			sprite_index = 166,
-			description = "Gives two cards the ability to add 30 Chips when scored",
+			description = "gives two cards the ability\nto add 30 chips when scored",
 			type = "Tarot"
 		},
 		{
-			name = "Multiply Money by 2",
+			name = "the hermit",
 			price = 4,
 			effect = function()
 				if money >= 20 then
@@ -393,11 +393,11 @@ special_cards = {
 				end
 			end,
 			sprite_index = 167,
-			description = "Multiplies your money by 2 with the max being 20",
+			description = "Multiplies your money by\n2 with the max being 20",
 			type = "Tarot"
 		},
 		{
-			name = "Delete Cards",
+			name = "the hanged man",
 			price = 2,
 			effect = function(tarot)
 				if #selected_cards <= 2 then
@@ -418,7 +418,7 @@ special_cards = {
 				end
 			end,
 			sprite_index = 168,
-			description = "Deletes two selected cards from the deck",
+			description = "Deletes two selected\ncards from the deck",
 			type = "Tarot"
 		},
 	}
@@ -647,6 +647,7 @@ function _draw()
 		draw_exit_button()
 	end
     draw_mouse(mx, my)
+    draw_tooltips()
 	draw_error_message()
 end
 
@@ -977,6 +978,44 @@ end
 
 function draw_mouse(x, y)
 	spr(192, x, y)
+end
+
+function draw_tooltips(x,y)
+	for joker in all(joker_cards) do
+		if mouse_sprite_collision(joker.pos_x - card_width, joker.pos_y, card_width*2, card_height*2) then
+			describe_card(joker) return
+		end
+	end
+	for tarot in all(tarot_cards) do
+		if mouse_sprite_collision(tarot.pos_x - card_width, tarot.pos_y, card_width*2, card_height*2) then
+			describe_card(tarot) return
+		end
+	end
+	if in_shop then
+		for special_card in all(shop_options) do
+			if mouse_sprite_collision(special_card.pos_x, special_card.pos_y, card_width, card_height*2) then
+				describe_card(special_card) return
+			end
+		end
+	end
+end
+
+function describe_card(card)
+	if card.type == 'Joker' then
+		bg=0 fg=7 -- white on black
+	elseif card.type == 'Tarot' then
+		bg=15 fg=1 -- black on off-white
+	else -- planet
+		bg=12 fg=7 -- white on blue
+	end
+
+	-- window appears at bottom
+	rectfill(0,98,127,127,bg)
+	-- print first letter of type on right side
+	print("\^p"..card.type[1],120,99,fg)
+	spr(card.sprite_index,3,99)
+	print(card.name,card_width+8,99,fg)
+	print(card.description,1,110,fg)
 end
 
 function select_hand(card)
