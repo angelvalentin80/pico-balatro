@@ -481,7 +481,7 @@ special_cards = {
 	Tarots = {
 		tarot_obj:new({
 			name = "the devil",
-			price = 0,
+			price = 2,
 			effect = card_enhancement(1,function(card,self)
 				card.bgtile = 45
 				card.when_held_in_hand = do_nothing
@@ -494,7 +494,7 @@ special_cards = {
 		}),
 		tarot_obj:new({
 			name = "the chariot",
-			price = 0,
+			price = 2,
 			effect = card_enhancement(1,function(card,self)
 				card.bgtile = 46
 				card.when_held_in_hand = function(c)
@@ -503,7 +503,7 @@ special_cards = {
 				card.when_held_at_end = do_nothing
 			end),
 			sprite_index = 170,
-			description = "converts 1 card into a\nsteel card, which grants x1.5 if\ncard is in left in hand",
+			description = "converts 1 card into a\nsteel card, which grants x1.5 mult \nif card is left in hand",
 		}),
 		tarot_obj:new({
 			name = "strength",
@@ -907,13 +907,14 @@ function score_hand()
 		add_chips( card.chips + card.effect_chips, card )
 		add_mult( card.mult, card )
 	end
+	score_held_cards()
 	score_jokers()
 	score += (chips * mult)
+	finish_scoring_hand()
+	-- Reset
 	chips = bigscore:new(0)
 	mult = bigscore:new(0)
 	hand_type_text = ""
-	score_held_cards()
-	finish_scoring_hand()
 end
 
 function score_jokers()
@@ -1165,7 +1166,8 @@ function add_cards_to_shop()
 	add(shop_options, random_tarot)
 
 	-- TODO TEST If you want to test specific cards, use below 
-	--add(shop_options, get_special_card_by_name("Change to Diamonds", "Tarots"))
+	--add(shop_options, get_special_card_by_name("the chariot", "Tarots")) -- TODO test
+	--add(shop_options, get_special_card_by_name("the empress", "Tarots")) -- TODO test
 end
 
 function create_view_of_deck(table)
