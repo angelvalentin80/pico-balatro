@@ -129,8 +129,10 @@ item_obj={
 	pos_y=0,
 	from_x=nil,
 	from_y=nil,
-	frames=0
+	frames=0,
+	picked_up=false
 }
+picked_up_item=nil
 function item_obj:new(obj) 
 	return setmetatable(obj, {
 		__index=self
@@ -167,9 +169,13 @@ function item_obj:draw()
 	-- no animation
 	self:draw_at(self.pos_x,self.pos_y)
 end
+
+-- draw at absolute position
+-- regardless of obj position
 function item_obj:draw_at(x,y)
 	spr(self.sprite_index, x, y)
 end
+
 function item_obj:moused(morex,morey)
 	morex=min(morex) -- default 0
 	morey=min(morey)
@@ -178,6 +184,53 @@ function item_obj:moused(morex,morey)
 		self.pos_y,
 		self.width+morex,
 		self.height+morey) 
+end
+
+-- called when mouse is clicked
+-- and held
+function item_obj:pickup()
+	-- record start state of
+	-- object and mouse
+	self.picked_up = {
+		src_x=self.pos_x,
+		src_y=self.pos_y,
+		mx=mx,
+		my=my,
+		offx= mx-self.pos_x,
+		offy= my-self.pos_y,
+		moved=false
+	}
+	picked_up_item=self
+end
+
+-- detect if the mouse moves
+-- more than 1 pixel between
+-- mouse_down and mouse_up
+function item_obj:detect_moved()
+	if(not self.picked_up) return
+	if(self.picked_up.moved) return
+	if abs(mx-self.picked_up.mx)>1
+		or abs(my-self.picked_up.my)>1
+		then
+			self.picked_up.moved=true
+	end
+end
+
+function item_obj:drop()
+	if(picked_up_item!=self) return
+	if(not self.picked_up) return
+	self:drop_at(
+		mx-self.picked_up.offx,
+		my-self.picked_up.offy
+	)
+	self.picked_up=nil
+	picked_up_item=nil
+end
+
+-- fallback: leave it where it lies
+function item_obj:drop_at(px,py)
+	self.pos_x=px
+	self.pos_y=py
 end
 
 -- utility functions
@@ -216,6 +269,14 @@ function card_obj:draw_at(x,y)
 	pal()
 end
 
+function card_obj:draw_at_mouse()
+	if (not self.picked_up) return
+	self:draw_at(
+		mx-self.picked_up.offx,
+		my-self.picked_up.offy
+	)
+end
+
 -- rank moving
 function card_obj:set_rank_by_order(o)
 	for r in all(ranks) do
@@ -234,7 +295,7 @@ function card_obj:set_rank(r)
 end
 
 function card_obj:plus_order(d)
-	return ((self.order+d-1) % 13) + 1
+	return ((self.order-d-1) % 13) + 1
 end
 
 function card_obj:add_rank(d)
@@ -401,13 +462,23 @@ special_cards = {
 			description = "Multiplies your mult by 1.5",
 		}),
 		joker_obj:new({
-			name = "Times 2 Mult",
-			price = 7,
+			name = "photograph",
+			price = 5,
+			card_affected=nil,
+			card_effect=function(self,card)
+				if self.card_affected==nil and card:is_face() then
+					self.card_affected=card
+				end
+				if self.card_affected==card then
+					multiply_mult(2, card)
+					add_sparkle(34,self,9)
+				end
+			end,
 			effect = function(self)
-				multiply_mult(2, self)
+				self.card_affected=nil
 			end,
 			sprite_index = 133, 
-			description = "Multiplies your mult by 2",
+			description = "first played face card gives\nx2 mult when scored",
 		}),
 		joker_obj:new({
 			name = "Times 3 Mult",
@@ -987,9 +1058,11 @@ function scroll_cards(ms)
 	end
 end
 
+btn_frames=0
+
 function _update()
-    mx = stat(32)
-    my = stat(33)
+	mx = stat(32)
+	my = stat(33)
  -- check score_hand animation
 	if costatus(animation)!='dead' then
 		coresume(animation)
@@ -1006,9 +1079,23 @@ function _update()
     --register inputs
     -- Check mouse buttons
 	-- btn(5) left click, btn(4) right click
+	
+	-- detect mouse-down event
+	if btn(5) then
+		if btn_frames==0 then 
+			mouse_down()
+		elseif picked_up_item then
+			-- detect drag action
+			picked_up_item:detect_moved()
+		end
+		btn_frames+=1
+	elseif btn_frames>0 then
+		mouse_up()
+		btn_frames=0
+	end
+
+	-- simpler handlers
 	if btnp(5) and not in_shop then 
-		hand_collision()
-		update_selected_cards()
 		play_button_clicked()
 		discard_button_clicked()
 		use_button_clicked()
@@ -1031,6 +1118,19 @@ function _update()
 		deselect_all_selected_cards()
 	end
 
+end
+
+-- handle mouse-down event
+function mouse_down()
+	hand_collision_down()
+end
+
+-- handle mouse-up event
+-- process clicks and drags
+function mouse_up()
+	if(not picked_up_item) return
+	picked_up_item:drop()
+	picked_up_item=nil
 end
 
 function _draw()
@@ -1093,6 +1193,8 @@ end
 -- yield commands can be used
 function score_hand()
 	pause(5) -- wait for sfx
+ -- card are processed left-to-right
+	sort_by_x(scored_cards)
 	-- Score cards 
 	for card in all(scored_cards) do
 		add_chips( card.chips + card.effect_chips, card )
@@ -1335,7 +1437,7 @@ function create_base_deck()
 	-- array returned by 
 	-- card_frequencies()
 	for i, card in pairs(ranks) do
-    	card.order = 14 - i
+		card.order = i
 	end
 
 	-- Create deck
@@ -1450,29 +1552,42 @@ function draw_background()
     rectfill(0, 0, 128, 128, 3) 
 end
 
-function draw_hand()	
+function distribute_hand()
 	local x = 15	
 	local y = 90 
+		for card in all(hand) do
+			if card.selected then
+				card:place(x,y-10,5)
+			else
+				card:place(x,y,5)
+			end
+			x += card.width + draw_hand_gap
+		end
+end
+
+function draw_hand()	
 	if init_draw then
-		for i=1,#hand do
-			hand[i]:place(x,y)
-			hand[i]:draw()
-			x += hand[i].width + draw_hand_gap
-		end
+		distribute_hand()
 		init_draw = false
-	else
-		for i=1,#hand do
- 	   		hand[i]:draw()
-		end
+	end
+	for i=1,#hand do
+		hand[i]:draw()
 	end
 end
 
 function draw_mouse(x, y)
 	palt(0x8000)
+	if picked_up_item then
+		picked_up_item:draw_at_mouse()
+	end
 	spr(192, x, y)
 end
 
 function draw_tooltips(x,y)
+	if picked_up_item  then
+		return -- none of these other
+       		-- cards are targets.
+	end
 	for joker in all(joker_cards) do
 		if mouse_sprite_collision(joker.pos_x - card_width, joker.pos_y, card_width*2, card_height*2) then
 			joker:describe() return
@@ -1655,14 +1770,33 @@ function draw_exit_button()
 end
 
 -- Inputs
-function hand_collision()
-	-- Check if the mouse is colliding with a card in our hand 
+
+-- called when mouse-down to
+-- check if card picked up
+function hand_collision_down()
 	for card in all(hand) do
 		if card:moused() then
-				sfx(sfx_card_select)
-				select_hand(card)
+				card:pickup()
+				card.drop_at=hand_collision_up
 				break
 		end
+	end
+end
+
+-- drop a dragged card or click
+function hand_collision_up(self,px,py)
+	if(self.picked_up.moved) then
+		if py < 50 or my > 102 then
+			return
+		end
+		self.pos_x = px
+		self.pos_y = py
+		sort_by_x(hand)
+		distribute_hand()
+	else -- click, not drop
+		sfx(sfx_card_select)
+		select_hand(self)
+		update_selected_cards()
 	end
 end
 
@@ -1917,8 +2051,6 @@ function contains_straight(cf)
 		return false
 	end
 	local run_length=0
-	-- special case for a,2,3,4,5
-	if(cf[#cf]>0) run_length=1
 	-- detect run
 	for f in all(cf) do
 		if f>0 then
@@ -1930,6 +2062,12 @@ function contains_straight(cf)
 			run_length=0
 		end
 	end
+	-- special case for a,2,3,4,5
+	if run_length == run_goal-1
+		and cf[1] > 0 then
+		return true
+	end
+	-- insufficient run
 	return false
 end
 
@@ -1939,35 +2077,27 @@ function add_all_cards_to_score(cards)
 	end
 end
 
+-- when cards are moved by mouse
+function sort_by_x(cards)
+	sort_by("pos_x",cards)
+end
+
+-- when cards are drawn
 function sort_by_rank_decreasing(cards)
+	sort_by("order",cards)
+end
+
+function sort_by(property,cards)
 	-- insertion sort
 	for i=2,#cards do
-		current_order = cards[i].order
+		current_order = cards[i][property]
 		current = cards[i]
 		j = i - 1
-		while (j >= 1 and current_order > cards[j].order) do
+		while (j >= 1 and current_order < cards[j][property]) do
 			cards[j + 1] = cards[j]
 			j = j - 1
 		end
 		cards[j + 1] = current
-	end
-end
-
-function get_rank_add(rank,inc)
-	idx=find_rank_index(rank)
-	result=((idx+inc-1)%#ranks)+1
-	return result
-end
-
-function find_rank_index(rank)
-	if type(rank) == "string" then
-		for i,r in pairs(ranks) do
-			if(r.rank==rank) return i
-		end
-	else
-		for i,r in pairs(ranks) do
-			if(r==rank) return i
-		end
 	end
 end
 
@@ -1987,7 +2117,6 @@ end
 function change_to_suit(suit, tarot)
 	if #selected_cards <= 3 then
 		for card in all(selected_cards) do
-			card.sprite_index = card.rank.sprite_index
 			card.suit = suit 
 			card.selected = false
 			card.pos_y = card.pos_y + 10
