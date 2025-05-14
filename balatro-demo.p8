@@ -116,6 +116,52 @@ function draw_sparkles()
 	end
 end
 
+-- button object for clicks
+button_obj={
+	pos_x=0, pos_y=0,
+	sprite_index=0,
+	height=16, width=16,
+}
+function button_obj:new(obj)
+	return setmetatable(obj, {
+		__index=self
+	})
+end
+function button_obj:draw()
+	self:draw_at(
+			self.pos_x,self.pos_y)
+end
+function button_obj:draw_at(x,y)
+	spr(self.sprite_index, x, y, 
+		self.width/8, 
+		self.height/8)
+end
+function button_obj:moused()
+	return mouse_sprite_collision(
+		self.pos_x, self.pos_y,
+		self.width, self.height)
+end
+
+textbutton_obj=button_obj:new({
+	height=9,color=0
+})
+function textbutton_obj:new(obj)
+	obj.height=9
+	obj.width=#(obj.text)*4 + 4
+	return setmetatable(obj, {
+		__index=self
+	})
+end
+
+function textbutton_obj:draw_at(x,y)
+	rectfill(x, y, 
+		x+self.width-1, 
+		y+self.height-1, 
+		self.color)
+	print(self.text,x+2,y+2,7)
+end
+
+
 -- abstract item object 
 -- can be drawn on screen and reset
 item_obj={
@@ -149,8 +195,8 @@ function item_obj:place(x,y,frames)
 end
 function item_obj:reset()
 	self.selected=false
-	self.pos_x=deck_sprite_pos_x
-	self.pos_y=deck_sprite_pos_y
+	self.pos_x=btn_deck.pos_x
+	self.pos_y=btn_deck.pos_y
 end
 function item_obj:draw()
 	if(picked_up_item==self)return
@@ -970,37 +1016,46 @@ assert_score( (bigscore:new(300) + naneinf:new(300)), "naneinf" )
 deck_sprite_index = 47
 deck_sprite_pos_x = 112
 deck_sprite_pos_y = 100
+btn_deck=button_obj:new( {
+	pos_x=112, pos_y=100,
+	height=15,width=8,
+	sprite_index=47,
+})
 
 -- buttons
-btn_width = 16
-btn_height = 16
-btn_gap = 10
-btn_play_hand_sprite_index = 64
-btn_play_hand_pos_x = 32 
-btn_play_hand_pos_y = 110
-btn_discard_hand_sprite_index = 66
-btn_discard_hand_pos_x = 80 
-btn_discard_hand_pos_y = 110
+btn_play_hand=button_obj:new( {
+	pos_x=32, pos_y=110,
+	sprite_index=64
+} )
+btn_discard_hand=button_obj:new( {
+	pos_x=80, pos_y=110,
+	sprite_index=66
+} )
 btn_buy_sprite_index = 74
 btn_use_sprite_index = 75 
 btn_sell_sprite_index = 76 
 
-btn_go_next_sprite_index = 70
-btn_go_next_pos_x = 20 
-btn_go_next_pos_y = 50 
-btn_reroll_sprite_index = 72
-btn_reroll_pos_x = 20 
-btn_reroll_pos_y = 70 
+btn_go_next=button_obj:new( {
+	pos_x=20, pos_y=50,
+	sprite_index=70
+} )
+btn_reroll=button_obj:new( {
+	pos_x=20, pos_y=70,
+	sprite_index=72
+} )
 
-btn_full_deck_pos_x = 12 
-btn_full_deck_pos_y = 100 
-btn_full_deck_text = "Full Deck"
-btn_remaining_deck_pos_x = 62 
-btn_remaining_deck_pos_y = 100 
-btn_remaining_deck_text = "Remaining Deck"
-btn_exit_view_deck_pox_x = 52
-btn_exit_view_deck_pox_y = 115 
-btn_exit_view_deck_text = "Exit"
+btn_full_deck=textbutton_obj:new( {
+	pos_x=12, pos_y=100,
+	text="full deck", color=12
+} )
+btn_remaining_deck=textbutton_obj:new( {
+	pos_x=62, pos_y=100,
+	text="remaining deck", color=12
+} )
+btn_exit=textbutton_obj:new( {
+	pos_x=52, pos_y=115,
+	text="exit", color=8
+} )
 
 -- Sound Effects
 sfx_card_select = 0
@@ -1183,7 +1238,6 @@ function _draw()
 		draw_chips_and_mult()
 		draw_score()
 		draw_hand_type(hand_type_text)
-		-- draw_special_card_pixels()
 		draw_deck()
 		-- always draw
 		draw_hands_and_discards()
@@ -1193,11 +1247,11 @@ function _draw()
 		draw_tarot_cards()
 	elseif is_viewing_deck then
 		draw_view_of_deck()
-		draw_full_deck_button()
+		btn_full_deck:draw()
 		if not in_shop then
-			draw_remaining_deck_button()
+			btn_remaining_deck:draw()
 		end
-		draw_exit_button()
+		btn_exit:draw()
 	end
     draw_mouse(mx, my)
     draw_tooltips()
@@ -1611,7 +1665,7 @@ function draw_tooltips(x,y)
        		-- cards are targets.
 	end
 	for joker in all(joker_cards) do
-		if mouse_sprite_collision(joker.pos_x - card_width, joker.pos_y, card_width*2, card_height*2) then
+		if joker:moused() then
 			joker:describe() return
 		end
 	end
@@ -1646,8 +1700,8 @@ function select_hand(card)
 end
 
 function draw_play_discard_buttons()
-	spr(btn_play_hand_sprite_index, btn_play_hand_pos_x, btn_play_hand_pos_y, 2, 2)
-	spr(btn_discard_hand_sprite_index, btn_discard_hand_pos_x, btn_discard_hand_pos_y, 2, 2)
+	btn_play_hand:draw()
+	btn_discard_hand:draw()
 end
 
 function draw_chips_and_mult()
@@ -1669,9 +1723,9 @@ function draw_hand_type()
 end
 
 function draw_deck()
-	rectfill(deck_sprite_pos_x-1,deck_sprite_pos_y-1,deck_sprite_pos_x+6,deck_sprite_pos_y+13,0)
-	spr(deck_sprite_index, deck_sprite_pos_x, deck_sprite_pos_y, 1, 1.875)
-	print(#shuffled_deck .. "/" .. #base_deck, deck_sprite_pos_x-9, deck_sprite_pos_y + 20, 7)
+	rectfill(btn_deck.pos_x-1,btn_deck.pos_y-1,btn_deck.pos_x+6,btn_deck.pos_y+13,0)
+	btn_deck:draw()
+	print(#shuffled_deck .. "/" .. #base_deck, btn_deck.pos_x-9, btn_deck.pos_y + 20, 7)
 end
 
 function draw_hands_and_discards()
@@ -1699,9 +1753,11 @@ end
 
 function draw_go_next_and_reroll_button()
 	palt()
-	spr(btn_go_next_sprite_index, btn_go_next_pos_x, btn_go_next_pos_y, 2, 2)
-	spr(btn_reroll_sprite_index, btn_reroll_pos_x, btn_reroll_pos_y, 2, 2)
-	print("$"..reroll_price, btn_reroll_pos_x + flr(card_width / 2), btn_reroll_pos_y + btn_height, 7)
+	btn_go_next:draw()
+	btn_reroll:draw()
+	print("$"..reroll_price, 
+		btn_reroll.pos_x + flr(card_width / 2), 
+		btn_reroll.pos_y + btn_reroll.height, 7)
 end
 
 function draw_shop_options()
@@ -1754,10 +1810,10 @@ function draw_each_card_in_table(table, start_x, start_y, gap)
 end
 
 function draw_view_of_deck()
-	view_deck_card_gap_x = 1
-	view_deck_card_gap_y = 20
-	draw_start_pos_x = 5 
-	draw_start_pos_y = 10
+	local view_deck_card_gap_x = 1
+	local view_deck_card_gap_y = 20
+	local draw_start_pos_x = 5 
+	local draw_start_pos_y = 10
 	draw_each_card_in_table(heart_cards, draw_start_pos_x, draw_start_pos_y, view_deck_card_gap_x)
 
 	draw_start_pos_y = draw_start_pos_y + view_deck_card_gap_y 
@@ -1768,27 +1824,6 @@ function draw_view_of_deck()
 
 	draw_start_pos_y = draw_start_pos_y + view_deck_card_gap_y 
 	draw_each_card_in_table(spade_cards, draw_start_pos_x, draw_start_pos_y, view_deck_card_gap_x)
-end
-
-function draw_button_with_text(x, y, text, color)
-    local text_width = #text * 4
-    local text_height = 7
-
-    rectfill(x-2, y-2, x + text_width + 2, y + text_height + 2, color)
-
-    print(text, x, y, 7)
-end
-
-function draw_full_deck_button()
-	draw_button_with_text(btn_full_deck_pos_x, btn_full_deck_pos_y, btn_full_deck_text, 12)
-end
-
-function draw_remaining_deck_button()
-	draw_button_with_text(btn_remaining_deck_pos_x, btn_remaining_deck_pos_y, btn_remaining_deck_text, 12)
-end
-
-function draw_exit_button()
-	draw_button_with_text(btn_exit_view_deck_pox_x, btn_exit_view_deck_pox_y, btn_exit_view_deck_text, 8)
 end
 
 -- Inputs
@@ -1828,7 +1863,7 @@ function mouse_sprite_collision(sx, sy, sw, sh)
 end
 
 function play_button_clicked()
-	if mouse_sprite_collision(btn_play_hand_pos_x, btn_play_hand_pos_y, btn_width, btn_height) and #selected_cards > 0 and hands > 0 then
+	if btn_play_hand:moused() and #selected_cards > 0 and hands > 0 then
 		sfx(sfx_play_btn_clicked)
 		hands = hands - 1
 		animation=cocreate(score_hand)
@@ -1856,7 +1891,7 @@ function finish_scoring_hand()
 end
 
 function discard_button_clicked()
-	if mouse_sprite_collision(btn_discard_hand_pos_x, btn_discard_hand_pos_y, btn_width, btn_height) and #selected_cards > 0 and discards > 0 then
+	if btn_discard_hand:moused() and #selected_cards > 0 and discards > 0 then
 		sfx(sfx_discard_btn_clicked)
 		for card in all(selected_cards) do
 			del(hand, card)	
@@ -1871,7 +1906,7 @@ function discard_button_clicked()
 end
 
 function go_next_button_clicked()
-	if mouse_sprite_collision(btn_go_next_pos_x, btn_go_next_pos_y, btn_width, btn_height)	and in_shop == true then
+	if btn_go_next:moused()	and in_shop then
 		sfx(sfx_card_select)
 		in_shop = false			
 		shop_options = {}
@@ -1882,13 +1917,13 @@ function go_next_button_clicked()
 end
 
 function reroll_button_clicked()
-	if mouse_sprite_collision(btn_reroll_pos_x, btn_reroll_pos_y, btn_width, btn_height) and in_shop == true and money >= reroll_price then
+	if btn_reroll:moused() and in_shop == true and money >= reroll_price then
 		sfx(sfx_buy_btn_clicked)
 		money = money - reroll_price
 		shop_options = {}
 		add_cards_to_shop()
 		reroll_price = reroll_price + 1
-	elseif mouse_sprite_collision(btn_reroll_pos_x, btn_reroll_pos_y, btn_width, btn_height) and in_shop == true and money < reroll_price then
+	elseif btn_reroll:moused() and in_shop == true and money < reroll_price then
 		sfx(sfx_error_message)
 		error_message = "You don't have enough\n money to reroll.\n Get your money up."
 	end
@@ -1976,7 +2011,7 @@ function sell_button_clicked()
 end
 
 function view_deck_button_clicked()
-	if mouse_sprite_collision(deck_sprite_pos_x, deck_sprite_pos_y, btn_width, btn_height) then
+	if btn_deck:moused() then
 		create_view_of_deck(base_deck)
 		is_viewing_deck = true
 
@@ -1994,24 +2029,21 @@ function view_deck_button_clicked()
 end
 
 function full_deck_button_clicked()
-	width_and_height = get_button_width_and_height(btn_full_deck_pos_x, btn_full_deck_pos_y, btn_full_deck_text)
-	if mouse_sprite_collision(btn_full_deck_pos_x, btn_full_deck_pos_y, width_and_height[1], width_and_height[2]) then	
+	if btn_full_deck:moused() then
 		sfx(sfx_card_select)
 		create_view_of_deck(base_deck)
 	end
 end
 
 function remaining_deck_button_clicked()
-	local width_and_height = get_button_width_and_height(btn_remaining_deck_pos_x, btn_remaining_deck_pos_y, btn_remaining_deck_text)
-	if mouse_sprite_collision(btn_remaining_deck_pos_x, btn_remaining_deck_pos_y, width_and_height[1], width_and_height[2]) then	
+	if btn_remaining_deck:moused() then
 		sfx(sfx_card_select)
 		create_view_of_deck(shuffled_deck)
 	end
 end
 
 function exit_view_deck_button_clicked()
-	local width_and_height = get_button_width_and_height(btn_exit_view_deck_pox_x, btn_exit_view_deck_pox_y, btn_exit_view_deck_text)
-	if mouse_sprite_collision(btn_exit_view_deck_pox_x, btn_exit_view_deck_pox_y, width_and_height[1], width_and_height[2]) then	
+	if btn_exit:moused() then
 		sfx(sfx_card_select)
 		is_viewing_deck = false 
 	end
@@ -2167,16 +2199,6 @@ function find_random_unique_shop_option(special_card_type, table_to_check)
 	return rnd(unique_table)
 end
 
-function get_button_width_and_height(x, y, text)
-	-- gets the button width from draw_button_with_text
-	local text_width = #text * 4
-    local text_height = 7
-    --rectfill(x-2, y-2, x + text_width + 2, y + text_height + 2, color) -- original math
-
-	local width = 4 + text_width
-	local height = 4 + text_height
-	return {width, height}
-end
 
 -- TEST
 function test_print_table(table)
